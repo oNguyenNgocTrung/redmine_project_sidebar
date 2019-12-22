@@ -36,7 +36,7 @@
       Project
     </a>
   </h3>
-  <div id="projects-index" class="projects-tree" style="display: none;">
+  <div id="projects-index" class="projects-tree" style="display: none; max-height: <%= Setting[:plugin_redmine_projects_sidebar][:project_tree_max_height].presence || 300 %>px;">
     <%= project_tree_html.html_safe %>
   </div>
 </div>

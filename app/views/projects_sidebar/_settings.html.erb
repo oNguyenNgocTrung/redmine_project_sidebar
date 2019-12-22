@@ -1,0 +1,5 @@
+<p>
+  <label>Project Tree Max Height</label>
+  <%= number_field_tag 'settings[project_tree_max_height]', @settings[:project_tree_max_height].to_i, min: 100 %>
+  <em>(We'll show scroll if tree too long)</em>
+</p>
