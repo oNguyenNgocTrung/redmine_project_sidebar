@@ -1,0 +1,61 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'projects_sidebar.css', plugin: "redmine_projects_sidebar" %>
+  <%= javascript_include_tag 'projects_sidebar.js', plugin: "redmine_projects_sidebar" %>
+<% end %>
+
+<%
+  projects = Project.visible.active.sorted.to_a
+  project_tree_html = ""
+  if projects.any?
+    ancestors = []
+    projects.sort_by(&:lft).each do |project|
+      if (ancestors.empty? || project.is_descendant_of?(ancestors.last))
+        project_tree_html << "<ul id='project-#{project.id}' class='projects #{ ancestors.empty? ? 'root' : nil}' style='display: #{ancestors.empty? ? 'block' : 'none'};'>\n"
+      else
+        ancestors.pop
+        project_tree_html << "</li>"
+        while (ancestors.any? && !project.is_descendant_of?(ancestors.last))
+          ancestors.pop
+          project_tree_html << "</ul></li>\n"
+        end
+      end
+      classes = (ancestors.empty? ? 'root' : 'child')
+      project_tree_html << "<li class='#{classes}'><div class='#{classes}'>"
+      project_tree_html << link_to(project.name, project_issues_path(project), class: "#{project.css_classes} #{User.current.member_of?(project) ? 'icon icon-fav my-project' : nil}")
+      project_tree_html << "</div>\n"
+      ancestors << project
+    end
+    project_tree_html << ("</li></ul>\n" * ancestors.size)
+  end
+%>
+
+<div class="projects-sidebar">
+  <h3>
+    <a class="toogle-projects-tree">
+      <span class="fa fa-plus-square"></span>
+      Project
+    </a>
+  </h3>
+  <div id="projects-index" class="projects-tree" style="display: none;">
+    <%= project_tree_html.html_safe %>
+  </div>
+</div>
+
+<h3><%= l(:label_issue_plural) %></h3>
+
+<ul>
+<li><%= link_to l(:label_issue_view_all), _project_issues_path(@project, :set_filter => 1) %></li>
+<% if @project %>
+<li><%= link_to l(:field_summary), project_issues_report_path(@project) %></li>
+<% end %>
+
+<% if User.current.allowed_to?(:import_issues, @project, :global => true) %>
+<li><%= link_to l(:button_import), new_issues_import_path %></li>
+<% end %>
+</ul>
+
+<%= call_hook(:view_issues_sidebar_issues_bottom) %>
+<%= call_hook(:view_issues_sidebar_planning_bottom) %>
+
+<%= render_sidebar_queries(IssueQuery, @project) %>
+<%= call_hook(:view_issues_sidebar_queries_bottom) %>
